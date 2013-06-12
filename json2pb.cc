@@ -15,6 +15,8 @@
 
 #include <exception>
 
+#include "bin2ascii.h"
+
 using google::protobuf::Message;
 using google::protobuf::MessageFactory;
 using google::protobuf::Descriptor;
@@ -39,54 +41,6 @@ public:
 
 	virtual const char *what() const throw () { return _error.c_str(); };
 };
-
-static std::string hex2bin(const std::string &s)
-{
-	if (s.size() % 2)
-		throw j2pb_error("Odd hex data size");
-	static const char lookup[] = ""
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x00
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x10
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x20
-		"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x10\x10\x10\x10\x10" // 0x30
-		"\x10\x0a\x0b\x0c\x0d\x0e\x0f\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x40
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x50
-		"\x10\x0a\x0b\x0c\x0d\x0e\x0f\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x60
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x70
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x80
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0x90
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0xa0
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0xb0
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0xc0
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0xd0
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0xe0
-		"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10" // 0xf0
-		"";
-	std::string r;
-	r.reserve(s.size() / 2);
-	for (size_t i = 0; i < s.size(); i += 2) {
-		char hi = lookup[s[i]];
-		char lo = lookup[s[i+1]];
-		if (0x80 & (hi | lo))
-			throw j2pb_error("Invalid hex data: " + s.substr(i, 6));
-		r.push_back((hi << 4) | lo);
-	}
-	return r;
-}
-
-static std::string bin2hex(const std::string &s)
-{
-	static const char lookup[] = "0123456789abcdef";
-	std::string r;
-	r.reserve(s.size() * 2);
-	for (size_t i = 0; i < s.size(); i++) {
-		char hi = s[i] >> 4;
-		char lo = s[i] & 0xf;
-		r.push_back(lookup[hi]);
-		r.push_back(lookup[lo]);
-	}
-	return r;
-}
 
 static json_t * _pb2json(const Message& msg);
 static json_t * _field2json(const Message& msg, const FieldDescriptor *field, size_t index)
@@ -119,7 +73,7 @@ static json_t * _field2json(const Message& msg, const FieldDescriptor *field, si
 				ref->GetRepeatedStringReference(msg, field, index, &scratch):
 				ref->GetStringReference(msg, field, &scratch);
 			if (field->type() == FieldDescriptor::TYPE_BYTES)
-				jf = json_string(bin2hex(value).c_str());
+				jf = json_string(b64_encode(value).c_str());
 			else
 				jf = json_string(value.c_str());
 			break;
@@ -218,7 +172,7 @@ static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf)
 				throw j2pb_error(field, "Not a string");
 			const char * value = json_string_value(jf);
 			if(field->type() == FieldDescriptor::TYPE_BYTES)
-				_SET_OR_ADD(SetString, AddString, hex2bin(value));
+				_SET_OR_ADD(SetString, AddString, b64_decode(value));
 			else
 				_SET_OR_ADD(SetString, AddString, value);
 			break;

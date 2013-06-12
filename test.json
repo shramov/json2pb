@@ -1,7 +1,7 @@
 {
   "_str": "b",
   "id": 1,
-  "_bin": "0a0a0a",
+  "_bin": "0a0a0a0a",
   "_bool": true,
   "sub": {
     "field": "subfield", 

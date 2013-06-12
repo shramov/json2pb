@@ -9,6 +9,8 @@ clean:
 test_json: test_json.o test.pb.o libjson2pb.so -lprotobuf
 test_json.o: test.pb.h
 
+json2pb.o: bin2ascii.h
+
 libjson2pb.so: json2pb.o
 	$(CC) $(LDFLAGS) -o $@ $^ -Wl,-soname=$@ -Wl,-h -Wl,$@ -shared -L. -lcurl -lprotobuf -lstdc++ -ljansson
 
