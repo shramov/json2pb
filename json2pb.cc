@@ -13,9 +13,11 @@
 
 #include <json2pb.h>
 
-#include <exception>
+#include <stdexcept>
 
+namespace {
 #include "bin2ascii.h"
+}
 
 using google::protobuf::Message;
 using google::protobuf::MessageFactory;

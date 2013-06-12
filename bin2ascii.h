@@ -11,7 +11,7 @@
 #include <string>
 #include <stdexcept>
 
-static std::string hex2bin(const std::string &s)
+inline std::string hex2bin(const std::string &s)
 {
 	if (s.size() % 2)
 		throw std::runtime_error("Odd hex data size");
@@ -45,7 +45,7 @@ static std::string hex2bin(const std::string &s)
 	return r;
 }
 
-static std::string bin2hex(const std::string &s)
+inline std::string bin2hex(const std::string &s)
 {
 	static const char lookup[] = "0123456789abcdef";
 	std::string r;
@@ -59,7 +59,7 @@ static std::string bin2hex(const std::string &s)
 	return r;
 }
 
-static std::string b64_encode(const std::string &s)
+inline std::string b64_encode(const std::string &s)
 {
 	typedef unsigned char u1;
 	static const char lookup[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -86,7 +86,7 @@ static std::string b64_encode(const std::string &s)
 	return r;
 }
 
-static std::string b64_decode(const std::string &s)
+inline std::string b64_decode(const std::string &s)
 {
 	typedef unsigned char u1;
 	static const char lookup[] = ""
