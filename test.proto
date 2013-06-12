@@ -1,0 +1,25 @@
+package test;
+
+message EchoRequest {
+    required string text = 1;
+}
+
+message ComplexMessage {
+    required string _str = 1;
+    optional float  _float = 2;
+    repeated sint64 _int = 3;
+    required bytes  _bin = 4;
+    required bool   _bool = 5;
+    message SubMessage {
+        required string field = 1;
+        repeated EchoRequest echo = 2;
+    }
+    optional SubMessage sub = 10;
+    enum SubEnum {
+        VALUE1 = 10;
+        VALUE2 = 20;
+    };
+    optional SubEnum _enum = 11;
+}
+
+// vim: sts=4 sw=4 et
