@@ -2,15 +2,19 @@
 #include "test.pb.h"
 
 #include <stdio.h>
-
-const char json[] = "{\"_str\":\"b\", \"id\":1, \"_bin\":\"0a0a0a\", \"_bool\":true, \"sub\":{\"field\":\"subfield\"}, \"_int\":[10, 20, 30, 40], \"_enum\": \"VALUE1\"}";
+#include <stdio.h>
 
 using google::protobuf::Message;
 
 int main()
 {
+	char buf[8192];
+	FILE * fp = fopen("test.json", "r");
+	size_t size = fread(buf, 1, 8192, fp);
+	fclose(fp);
+
 	test::ComplexMessage msg;
-	json2pb(msg, json, sizeof(json)-1);
+	json2pb(msg, buf, size);
 	printf("Message: %s\n", msg.DebugString().c_str());
 	printf("JSON: %s\n", pb2json(msg).c_str());
 }

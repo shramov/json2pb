@@ -1,0 +1,17 @@
+{
+  "_str": "b",
+  "id": 1,
+  "_bin": "0a0a0a",
+  "_bool": true,
+  "sub": {
+    "field": "subfield", 
+    "echo": [
+     {"text": "first"},
+     {"text": "second"}
+    ]
+  },
+  "_int": [10, 20, 30, 40],
+  "_enum":  ["VALUE1", 20],
+  "str_list":["v0", "v1"]
+}
+

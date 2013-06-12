@@ -19,7 +19,8 @@ message ComplexMessage {
         VALUE1 = 10;
         VALUE2 = 20;
     };
-    optional SubEnum _enum = 11;
+    repeated SubEnum _enum = 11;
+    repeated string str_list = 12;
 }
 
 // vim: sts=4 sw=4 et
