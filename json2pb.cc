@@ -16,6 +16,7 @@
 #include <exception>
 
 using google::protobuf::Message;
+using google::protobuf::MessageFactory;
 using google::protobuf::Descriptor;
 using google::protobuf::FieldDescriptor;
 using google::protobuf::EnumDescriptor;
@@ -178,23 +179,29 @@ static json_t * _pb2json(const Message& msg)
 	return _auto.release();
 }
 
-static void _json2pb(Message& msg, const json_t *root, json_error_t *error);
-static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf, json_error_t *error)
+static void _json2pb(Message& msg, const json_t *root);
+static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf)
 {
 	const Reflection *ref = msg.GetReflection();
 	const bool repeated = field->is_repeated();
+	json_error_t error;
 
 	switch (field->cpp_type())
 	{
-#define _CONVERT(type, ctype, fmt, sfunc, afunc) 		\
-		case FieldDescriptor::type: {			\
-			ctype value;				\
-			int r = json_unpack_ex(jf, error, JSON_STRICT, fmt, &value); \
-			if (r) throw j2pb_error(field, "Failed to unpack"); \
+#define _SET_OR_ADD(sfunc, afunc, value)			\
+		do {						\
 			if (repeated)				\
 				ref->afunc(&msg, field, value);	\
 			else					\
 				ref->sfunc(&msg, field, value);	\
+		} while (0)
+
+#define _CONVERT(type, ctype, fmt, sfunc, afunc) 		\
+		case FieldDescriptor::type: {			\
+			ctype value;				\
+			int r = json_unpack_ex(jf, &error, JSON_STRICT, fmt, &value); \
+			if (r) throw j2pb_error(field, std::string("Failed to unpack: ") + error.text); \
+			_SET_OR_ADD(sfunc, afunc, value);	\
 			break;					\
 		}
 
@@ -210,15 +217,17 @@ static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf, 
 			if (!json_is_string(jf))
 				throw j2pb_error(field, "Not a string");
 			const char * value = json_string_value(jf);
-			if (field->type() == FieldDescriptor::TYPE_BYTES)
-				ref->SetString(&msg, field, hex2bin(value));
+			if(field->type() == FieldDescriptor::TYPE_BYTES)
+				_SET_OR_ADD(SetString, AddString, hex2bin(value));
 			else
-				ref->SetString(&msg, field, value);
+				_SET_OR_ADD(SetString, AddString, value);
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_MESSAGE: {
-			Message *mf = ref->MutableMessage(&msg, field);
-			_json2pb(*mf, jf, error);
+			Message *mf = (repeated)?
+				ref->AddMessage(&msg, field):
+				ref->MutableMessage(&msg, field);
+			_json2pb(*mf, jf);
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_ENUM: {
@@ -232,7 +241,7 @@ static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf, 
 				throw j2pb_error(field, "Not an integer or string");
 			if (!ev)
 				throw j2pb_error(field, "Enum value not found");
-			ref->SetEnum(&msg, field, ev);
+			_SET_OR_ADD(SetEnum, AddEnum, ev);
 			break;
 		}
 		default:
@@ -240,7 +249,7 @@ static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf, 
 	}
 }
 
-static void _json2pb(Message& msg, const json_t *root, json_error_t *error)
+static void _json2pb(Message& msg, const json_t *root)
 {
 	const Descriptor *d = msg.GetDescriptor();
 	const Reflection *ref = msg.GetReflection();
@@ -263,9 +272,9 @@ static void _json2pb(Message& msg, const json_t *root, json_error_t *error)
 			if (!json_is_array(jf))
 				throw j2pb_error(field, "Not array");
 			for (size_t j = 0; j < json_array_size(jf); j++)
-				_json2field(msg, field, json_array_get(jf, j), error);
+				_json2field(msg, field, json_array_get(jf, j));
 		} else
-			_json2field(msg, field, jf, error);
+			_json2field(msg, field, jf);
 	}
 }
 
@@ -284,7 +293,7 @@ void json2pb(Message &msg, const char *buf, size_t size)
 	if (!json_is_object(root))
 		throw j2pb_error("Malformed JSON: not an object");
 
-	_json2pb(msg, root, &error);
+	_json2pb(msg, root);
 }
 
 int json_dump_std_string(const char *buf, size_t size, void *data)
