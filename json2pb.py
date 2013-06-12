@@ -2,6 +2,15 @@
 # vim: sts=4 sw=4 et
 
 """
+Copyright (c) 2008-2013 Pavel Shramov <shramov@mexmat.net>
+
+json2pb is free software; you can redistribute it and/or modify
+it under the terms of the MIT license. See LICENSE for details.
+
+json2pb originaly was part of pbufrpc project
+"""
+
+"""
 Patch Message class with two functions:
     SerializeToJSON which works like SerializeToString but results in JSON message
     ParseFromJSON which parses JSON message and fills object
