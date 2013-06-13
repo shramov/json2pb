@@ -132,12 +132,13 @@ static json_t * _pb2json(const Message& msg)
 		else
 			continue;
 
-		json_object_set_new(root, field->name().c_str(), jf);
+		const std::string &name = (field->is_extension())?field->full_name():field->name();
+		json_object_set_new(root, name.c_str(), jf);
 	}
 	return _auto.release();
 }
 
-static void _json2pb(Message& msg, const json_t *root);
+static void _json2pb(Message& msg, json_t *root);
 static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf)
 {
 	const Reflection *ref = msg.GetReflection();
@@ -207,23 +208,23 @@ static void _json2field(Message &msg, const FieldDescriptor *field, json_t *jf)
 	}
 }
 
-static void _json2pb(Message& msg, const json_t *root)
+static void _json2pb(Message& msg, json_t *root)
 {
 	const Descriptor *d = msg.GetDescriptor();
 	const Reflection *ref = msg.GetReflection();
 	if (!d || !ref) throw j2pb_error("No descriptor or reflection");
 
-	for (size_t i = 0; i != d->field_count(); i++)
+	for (void *i = json_object_iter(root); i; i = json_object_iter_next(root, i))
 	{
-		const FieldDescriptor *field = d->field(i);
-		if (!field) throw j2pb_error("No field descriptor");
+		const char *name = json_object_iter_key(i);
+		json_t *jf = json_object_iter_value(i);
 
-		json_t *jf = json_object_get(root, field->name().c_str());
-		if (!jf) {
-			if (field->is_required())
-				throw j2pb_error(field, "required but missing");
-			continue;
-		}
+		const FieldDescriptor *field = d->FindFieldByName(name);
+		if (!field)
+			field = ref->FindKnownExtensionByName(name);
+			//field = d->file()->FindExtensionByName(name);
+
+		if (!field) throw j2pb_error("Unknown field: " + std::string(name));
 
 		int r = 0;
 		if (field->is_repeated()) {

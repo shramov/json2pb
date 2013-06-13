@@ -1,6 +1,5 @@
 {
   "_str": "b",
-  "id": 1,
   "_bin": "0a0a0a0a",
   "_bool": true,
   "sub": {
@@ -13,6 +12,6 @@
   "_int": [10, 20, 30, 40],
   "_enum":  ["VALUE1", 20],
   "str_list":["v0", "v1"],
-  "e_bool":false
+  "test.e_bool":false
 }
 
