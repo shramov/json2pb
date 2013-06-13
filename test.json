@@ -12,6 +12,7 @@
   },
   "_int": [10, 20, 30, 40],
   "_enum":  ["VALUE1", 20],
-  "str_list":["v0", "v1"]
+  "str_list":["v0", "v1"],
+  "e_bool":false
 }
 

@@ -15,6 +15,7 @@ int main()
 
 	test::ComplexMessage msg;
 	json2pb(msg, buf, size);
+	msg.SetExtension(test::e_bool, false);
 	printf("Message: %s\n", msg.DebugString().c_str());
 	printf("JSON: %s\n", pb2json(msg).c_str());
 }

@@ -111,10 +111,12 @@ static json_t * _pb2json(const Message& msg)
 	json_t *root = json_object();
 	json_autoptr _auto(root);
 
-	for (size_t i = 0; i != d->field_count(); i++)
+	std::vector<const FieldDescriptor *> fields;
+	ref->ListFields(msg, &fields);
+
+	for (size_t i = 0; i != fields.size(); i++)
 	{
-		const FieldDescriptor *field = d->field(i);
-		if (!field) return 0;
+		const FieldDescriptor *field = fields[i];
 
 		json_t *jf = 0;
 		if(field->is_repeated()) {

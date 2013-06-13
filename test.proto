@@ -21,6 +21,11 @@ message ComplexMessage {
     };
     repeated SubEnum _enum = 11;
     repeated string str_list = 12;
+    extensions 100 to 199;
+}
+
+extend ComplexMessage {
+    optional bool e_bool = 101;
 }
 
 // vim: sts=4 sw=4 et
