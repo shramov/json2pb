@@ -1,0 +1,5 @@
+*.o
+*.so
+*.pb.cc
+*.pb.h
+test_json
