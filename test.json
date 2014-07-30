@@ -2,6 +2,7 @@
   "_str": "b",
   "_bin": "0a0a0a0a",
   "_bool": true,
+  "_float": 1,
   "sub": {
     "field": "subfield", 
     "echo": [
